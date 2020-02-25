@@ -1106,6 +1106,11 @@ impl DB {
         self.cfs.get(name)
     }
 
+    /// get all column family names, including 'default'.
+    pub fn cf_names(&self) -> Vec<&str> {
+        self.cfs.iter().map(|(k, _)| k.as_str()).collect()
+    }
+
     pub fn iterator<'a: 'b, 'b>(&'a self, mode: IteratorMode) -> DBIterator<'b> {
         let readopts = ReadOptions::default();
         self.iterator_opt(mode, &readopts)
@@ -1411,6 +1416,15 @@ impl DB {
 
     pub fn delete_cf<K: AsRef<[u8]>>(&self, cf: &ColumnFamily, key: K) -> Result<(), Error> {
         self.delete_cf_opt(cf, key.as_ref(), &WriteOptions::default())
+    }
+
+    pub fn delete_range_cf<S: AsRef<[u8]>, E: AsRef<[u8]>>(
+        &self,
+        cf: &ColumnFamily,
+        start: Option<S>,
+        end: Option<E>,
+    ) -> Result<(), Error> {
+        self.delete_range_cf_opt(cf, start, end, &WriteOptions::default())
     }
 
     pub fn compact_range<S: AsRef<[u8]>, E: AsRef<[u8]>>(&self, start: Option<S>, end: Option<E>) {
