@@ -1349,6 +1349,30 @@ impl DB {
         }
     }
 
+    pub fn delete_range_cf_opt<S: AsRef<[u8]>, E: AsRef<[u8]>>(
+        &self,
+        cf: &ColumnFamily,
+        start: Option<S>,
+        end: Option<E>,
+        writeopts: &WriteOptions,
+    ) -> Result<(), Error> {
+        unsafe {
+            let start = start.as_ref().map(|s| s.as_ref());
+            let end = end.as_ref().map(|e| e.as_ref());
+
+            ffi_try!(ffi::rocksdb_delete_range_cf(
+                self.inner,
+                writeopts.inner,
+                cf.inner,
+                opt_bytes_to_ptr(start),
+                start.map_or(0, |s| s.len()) as size_t,
+                opt_bytes_to_ptr(end),
+                end.map_or(0, |e| e.len()) as size_t,
+            ));
+            Ok(())
+        }
+    }
+
     pub fn put<K, V>(&self, key: K, value: V) -> Result<(), Error>
     where
         K: AsRef<[u8]>,
